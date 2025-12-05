@@ -46,6 +46,13 @@ const budgetWeight: Record<CostBudget, number> = {
   "$100+": 3
 };
 
+const budgetLabel: Record<CostBudget, string> = {
+  "$0": "$0",
+  "$1-20": "$1–$20",
+  "$20-100": "$20–$100",
+  "$100+": "$100+"
+};
+
 const archetypes: Archetype[] = [
   {
     id: "quick-wins",
@@ -296,5 +303,9 @@ export function generateSolutionPaths(selection: ConstraintSelection): Archetype
 }
 
 export function formatConstraintLabel(selection: ConstraintSelection) {
-  return `${selection.energy} energy • ${selection.time} • ${selection.budget}`;
+  return `${selection.energy} energy • ${selection.time} • ${budgetLabel[selection.budget]}`;
+}
+
+export function formatBudgetLabel(budget: CostBudget) {
+  return budgetLabel[budget];
 }
