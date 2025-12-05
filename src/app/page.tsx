@@ -50,6 +50,8 @@ interface ConstraintToggleGroupProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   icon?: ComponentType<{ className?: string }>;
+  optionsClassName?: string;
+  optionClassName?: string;
 }
 
 function ConstraintToggleGroup<T extends string>({
@@ -58,9 +60,11 @@ function ConstraintToggleGroup<T extends string>({
   options,
   value,
   onChange,
-  icon: Icon
+  icon: Icon,
+  optionsClassName,
+  optionClassName
 }: ConstraintToggleGroupProps<T>) {
-  const optionButtonClass = "rounded-full px-4 py-2 text-sm shadow-sm";
+  const optionButtonClass = `rounded-full px-4 py-2 text-sm shadow-sm ${optionClassName ?? ""}`;
 
   return (
     <div className="space-y-2">
@@ -68,7 +72,7 @@ function ConstraintToggleGroup<T extends string>({
         {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
         <span>{label}</span>
       </label>
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap gap-2 ${optionsClassName ?? ""}`}>
         {options.map((option) => {
           const isActive = option.value === value;
           return (
@@ -179,14 +183,16 @@ export default function HomePage() {
                     helperText="Available window for the next push."
                   />
                   <ConstraintToggleGroup
-                    label="Budget"
-                    icon={Wallet}
-                    options={budgetOptions}
-                    value={selection.budget}
-                    onChange={(value) => setSelection((prev) => ({ ...prev, budget: value as ConstraintSelection["budget"] }))}
-                    helperText="What you can spend to move faster."
-                  />
-                </div>
+                  label="Budget"
+                  icon={Wallet}
+                  options={budgetOptions}
+                  value={selection.budget}
+                  onChange={(value) => setSelection((prev) => ({ ...prev, budget: value as ConstraintSelection["budget"] }))}
+                  optionsClassName="flex flex-wrap gap-2"
+                  optionClassName="min-w-[96px]"
+                  helperText="What you can spend to move faster."
+                />
+              </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
