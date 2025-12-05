@@ -14,7 +14,8 @@ import {
   type ConstraintSelection,
   type Suggestion,
   generateSolutionPaths,
-  formatConstraintLabel
+  formatConstraintLabel,
+  formatBudgetLabel
 } from "@/lib/solutions";
 
 const FAVORITES_KEY = "solution-atlas-favorites";
@@ -33,10 +34,10 @@ const timeOptions = [
 ];
 
 const budgetOptions = [
-  { label: "$0", value: "$0" },
-  { label: "$1–20", value: "$1-20" },
-  { label: "$20–100", value: "$20-100" },
-  { label: "$100+", value: "$100+" }
+  { label: formatBudgetLabel("$0"), value: "$0" },
+  { label: formatBudgetLabel("$1-20"), value: "$1-20" },
+  { label: formatBudgetLabel("$20-100"), value: "$20-100" },
+  { label: formatBudgetLabel("$100+"), value: "$100+" }
 ];
 
 export default function HomePage() {
@@ -46,8 +47,9 @@ export default function HomePage() {
     time: "30m",
     budget: "$0"
   });
-  const [paths, setPaths] = useState<Archetype[]>(generateSolutionPaths(selection));
+  const [paths, setPaths] = useState<Archetype[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(FAVORITES_KEY);
@@ -60,6 +62,7 @@ export default function HomePage() {
 
   const handleGenerate = () => {
     setPaths(generateSolutionPaths(selection));
+    setHasGenerated(true);
   };
 
   const toggleFavorite = (suggestion: Suggestion) => {
@@ -84,6 +87,9 @@ export default function HomePage() {
               <Flame className="h-6 w-6" />
             </div>
             <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">
+                V0 Domain: Productivity + Focus
+              </p>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Solution Atlas</h1>
               <p className="mt-3 text-lg text-muted-foreground">
                 Generate pragmatic, low-friction paths tailored to your time, energy, and budget.
@@ -180,17 +186,33 @@ export default function HomePage() {
               {selectionLabel}
             </Badge>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {paths.map((archetype) => (
-              <SolutionCard
-                key={archetype.id}
-                archetype={archetype}
-                selectionLabel={selectionLabel}
-                favorites={favorites}
-                onFavoriteToggle={toggleFavorite}
-              />
-            ))}
-          </div>
+          {hasGenerated ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {paths.map((archetype) => (
+                <SolutionCard
+                  key={archetype.id}
+                  archetype={archetype}
+                  selectionLabel={selectionLabel}
+                  favorites={favorites}
+                  onFavoriteToggle={toggleFavorite}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed border-indigo-100 bg-white/60 text-center shadow-none">
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-lg">Ready when you are</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Set your energy, time, and budget, then generate focused archetypes for your next move.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Button size="lg" className="shadow-md shadow-indigo-200" onClick={handleGenerate}>
+                  Generate first paths
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </section>
       </div>
     </main>
