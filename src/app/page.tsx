@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { Flame, Timer, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SolutionCard } from "@/components/solution-card";
 import { HistoryPanel } from "@/components/history-panel";
 import {
-  type Archetype,
   type ConstraintSelection,
   type Suggestion,
   generateSolutionPaths,
@@ -40,6 +38,55 @@ const budgetOptions = [
   { label: formatBudgetLabel("$100+"), value: "$100+" }
 ];
 
+type ConstraintOption<T extends string> = {
+  label: string;
+  value: T;
+};
+
+interface ConstraintToggleGroupProps<T extends string> {
+  label: string;
+  helperText?: string;
+  options: ConstraintOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  icon?: ComponentType<{ className?: string }>;
+}
+
+function ConstraintToggleGroup<T extends string>({
+  label,
+  helperText,
+  options,
+  value,
+  onChange,
+  icon: Icon
+}: ConstraintToggleGroupProps<T>) {
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
+        <span>{label}</span>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const isActive = option.value === value;
+          return (
+            <Button
+              key={option.value}
+              type="button"
+              variant={isActive ? "default" : "outline"}
+              className="rounded-full px-4 py-2 text-sm shadow-sm"
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+            </Button>
+          );
+        })}
+      </div>
+      {helperText ? <p className="text-xs text-muted-foreground">{helperText}</p> : null}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [problem, setProblem] = useState("");
   const [selection, setSelection] = useState<ConstraintSelection>({
@@ -47,7 +94,6 @@ export default function HomePage() {
     time: "30m",
     budget: "$0"
   });
-  const [paths, setPaths] = useState<Archetype[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hasGenerated, setHasGenerated] = useState(false);
 
@@ -59,9 +105,9 @@ export default function HomePage() {
   }, []);
 
   const selectionLabel = useMemo(() => formatConstraintLabel(selection), [selection]);
+  const rankedPaths = useMemo(() => generateSolutionPaths(selection), [selection]);
 
   const handleGenerate = () => {
-    setPaths(generateSolutionPaths(selection));
     setHasGenerated(true);
   };
 
@@ -110,35 +156,29 @@ export default function HomePage() {
                 />
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <Select
+                  <ConstraintToggleGroup
                     label="Energy"
-                    value={selection.energy}
-                    onChange={(event) =>
-                      setSelection((prev) => ({ ...prev, energy: event.target.value as ConstraintSelection["energy"] }))
-                    }
-                    options={energyOptions}
-                    helperText="How much effort you can realistically spend."
                     icon={Flame}
+                    options={energyOptions}
+                    value={selection.energy}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, energy: value }))}
+                    helperText="How much effort you can realistically spend."
                   />
-                  <Select
+                  <ConstraintToggleGroup
                     label="Time"
-                    value={selection.time}
-                    onChange={(event) =>
-                      setSelection((prev) => ({ ...prev, time: event.target.value as ConstraintSelection["time"] }))
-                    }
-                    options={timeOptions}
-                    helperText="Available window for the next push."
                     icon={Timer}
+                    options={timeOptions}
+                    value={selection.time}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, time: value }))}
+                    helperText="Available window for the next push."
                   />
-                  <Select
+                  <ConstraintToggleGroup
                     label="Budget"
-                    value={selection.budget}
-                    onChange={(event) =>
-                      setSelection((prev) => ({ ...prev, budget: event.target.value as ConstraintSelection["budget"] }))
-                    }
-                    options={budgetOptions}
-                    helperText="What you can spend to move faster."
                     icon={Wallet}
+                    options={budgetOptions}
+                    value={selection.budget}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, budget: value }))}
+                    helperText="What you can spend to move faster."
                   />
                 </div>
 
@@ -188,7 +228,7 @@ export default function HomePage() {
           </div>
           {hasGenerated ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {paths.map((archetype) => (
+              {rankedPaths.map((archetype) => (
                 <SolutionCard
                   key={archetype.id}
                   archetype={archetype}
