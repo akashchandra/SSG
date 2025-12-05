@@ -1,0 +1,2 @@
+# SSG
+Solution Space Generator
