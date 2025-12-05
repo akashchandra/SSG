@@ -161,7 +161,7 @@ export default function HomePage() {
                     icon={Flame}
                     options={energyOptions}
                     value={selection.energy}
-                    onChange={(value) => setSelection((prev) => ({ ...prev, energy: value as EnergyLevel }))}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, energy: value as ConstraintSelection["energy"] }))}
                     helperText="How much effort you can realistically spend."
                   />
                   <ConstraintToggleGroup
@@ -169,7 +169,7 @@ export default function HomePage() {
                     icon={Timer}
                     options={timeOptions}
                     value={selection.time}
-                    onChange={(value) => setSelection((prev) => ({ ...prev, time: value as TimeBudget }))}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, time: value as ConstraintSelection["time"] }))}
                     helperText="Available window for the next push."
                   />
                   <ConstraintToggleGroup
@@ -177,7 +177,7 @@ export default function HomePage() {
                     icon={Wallet}
                     options={budgetOptions}
                     value={selection.budget}
-                    onChange={(value) => setSelection((prev) => ({ ...prev, budget: value as CostBudget }))}
+                    onChange={(value) => setSelection((prev) => ({ ...prev, budget: value as ConstraintSelection["budget"] }))}
                     helperText="What you can spend to move faster."
                   />
                 </div>
