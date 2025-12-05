@@ -60,6 +60,8 @@ function ConstraintToggleGroup<T extends string>({
   onChange,
   icon: Icon
 }: ConstraintToggleGroupProps<T>) {
+  const optionButtonClass = "rounded-full px-4 py-2 text-sm shadow-sm";
+
   return (
     <div className="space-y-2">
       <label className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -74,7 +76,8 @@ function ConstraintToggleGroup<T extends string>({
               key={option.value}
               type="button"
               variant={isActive ? "default" : "outline"}
-              className="rounded-full px-4 py-2 text-sm shadow-sm"
+              size="sm"
+              className={optionButtonClass}
               onClick={() => onChange(option.value)}
             >
               {option.label}
@@ -105,7 +108,10 @@ export default function HomePage() {
   }, []);
 
   const selectionLabel = useMemo(() => formatConstraintLabel(selection), [selection]);
-  const rankedPaths = useMemo(() => generateSolutionPaths(selection), [selection]);
+  const rankedPaths = useMemo(
+    () => generateSolutionPaths(selection),
+    [problem, selection.energy, selection.time, selection.budget]
+  );
 
   const handleGenerate = () => {
     setHasGenerated(true);
