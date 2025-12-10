@@ -4,27 +4,20 @@ import { useEffect, useState } from "react";
 import { Clock3, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { persistHistory, loadHistory } from "@/lib/storage";
 
 interface HistoryPanelProps {
   onSelect: (value: string) => void;
   activeProblem: string;
 }
 
-const STORAGE_KEY = "solution-atlas-history";
 const MAX_HISTORY = 10;
 
 export function HistoryPanel({ onSelect, activeProblem }: HistoryPanelProps) {
   const [items, setItems] = useState<string[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setItems(JSON.parse(saved));
-      } catch (error) {
-        console.error("Unable to load history", error);
-      }
-    }
+    setItems(loadHistory());
   }, []);
 
   useEffect(() => {
@@ -34,7 +27,7 @@ export function HistoryPanel({ onSelect, activeProblem }: HistoryPanelProps) {
         0,
         MAX_HISTORY
       );
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      persistHistory(next);
       return next;
     });
   }, [activeProblem]);
@@ -54,7 +47,7 @@ export function HistoryPanel({ onSelect, activeProblem }: HistoryPanelProps) {
             className="h-8 px-2 text-xs"
             onClick={() => {
               setItems([]);
-              localStorage.removeItem(STORAGE_KEY);
+              persistHistory([]);
             }}
           >
             <RotateCcw className="mr-1 h-3.5 w-3.5" /> Clear
