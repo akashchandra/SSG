@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { type ConstraintSelection } from "@/modules/types";
 import { type Archetype, type Suggestion, formatBudgetLabel, getFavoriteKey } from "@/lib/solutions";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,9 @@ interface SolutionCardProps {
   selectionLabel: string;
   favorites: Set<string>;
   onFavoriteToggle: (suggestion: Suggestion, moduleId: string) => void;
+  onSaveMicroPlan: (suggestion: Suggestion) => void;
+  constraintsSnapshot: ConstraintSelection;
+  problemSnapshot: string;
 }
 
 export function SolutionCard({
@@ -26,7 +30,10 @@ export function SolutionCard({
   archetype,
   selectionLabel,
   favorites,
-  onFavoriteToggle
+  onFavoriteToggle,
+  onSaveMicroPlan,
+  constraintsSnapshot,
+  problemSnapshot
 }: SolutionCardProps) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -101,6 +108,24 @@ export function SolutionCard({
                         <Bookmark className="h-4 w-4" />
                       )}
                     </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => onSaveMicroPlan(suggestion)}
+                    >
+                      Save as Micro-Plan
+                    </Button>
+                    {problemSnapshot ? (
+                      <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-medium uppercase tracking-wide">
+                        Linked to problem
+                      </span>
+                    ) : null}
+                    <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-medium uppercase tracking-wide">
+                      {constraintsSnapshot.energy} • {constraintsSnapshot.time} • {formatBudgetLabel(constraintsSnapshot.budget)}
+                    </span>
                   </div>
                 </div>
               );

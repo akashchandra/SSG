@@ -1,7 +1,8 @@
 "use client";
 
 import { type ComponentType, useEffect, useMemo, useState } from "react";
-import { Flame, Timer, Wallet } from "lucide-react";
+import { Flame, Library, Timer, Wallet } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +19,15 @@ import {
   getFavoriteKey
 } from "@/lib/solutions";
 import { moduleRegistry } from "@/modules/moduleRegistry";
-
-const FAVORITES_KEY = "solution-atlas-favorites";
-const MODULE_KEY = "solution-atlas-module";
+import {
+  FAVORITES_KEY,
+  MODULE_KEY,
+  type MicroPlan,
+  loadFavorites,
+  loadMicroPlans,
+  persistFavorites,
+  persistMicroPlans
+} from "@/lib/storage";
 const DEFAULT_MODULE_ID = moduleRegistry[0].meta.id;
 
 const energyOptions = [
@@ -113,13 +120,11 @@ export default function HomePage() {
   });
   const [selectedModuleId, setSelectedModuleId] = useState(DEFAULT_MODULE_ID);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [microPlans, setMicroPlans] = useState<MicroPlan[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(FAVORITES_KEY);
-    if (saved) {
-      setFavorites(new Set(JSON.parse(saved)));
-    }
+    setFavorites(loadFavorites());
   }, []);
 
   useEffect(() => {
@@ -127,6 +132,10 @@ export default function HomePage() {
     if (savedModule && moduleRegistry.some((module) => module.meta.id === savedModule)) {
       setSelectedModuleId(savedModule);
     }
+  }, []);
+
+  useEffect(() => {
+    setMicroPlans(loadMicroPlans());
   }, []);
 
   useEffect(() => {
@@ -141,7 +150,7 @@ export default function HomePage() {
   const selectionLabel = useMemo(() => formatConstraintLabel(selection), [selection]);
   const rankedPaths = useMemo(
     () => generateSolutionPaths(selectedModule, selection),
-    [selectedModule, selection.energy, selection.time, selection.budget]
+    [selectedModule, selection.energy, selection.time, selection.budget, problem]
   );
 
   const handleGenerate = () => {
@@ -161,7 +170,27 @@ export default function HomePage() {
       } else {
         next.add(favoriteKey);
       }
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(next)));
+      persistFavorites(next);
+      return next;
+    });
+  };
+
+  const saveMicroPlan = (suggestion: Suggestion, archetypeName: string) => {
+    const newPlan: MicroPlan = {
+      id: `${selectedModule.meta.id}-${suggestion.id}-${Date.now()}`,
+      title: suggestion.title,
+      archetype: archetypeName,
+      moduleId: selectedModule.meta.id,
+      moduleLabel: selectedModule.meta.label,
+      suggestionId: suggestion.id,
+      timestamp: Date.now(),
+      problemSnapshot: problem,
+      constraintsSnapshot: { ...selection }
+    };
+
+    setMicroPlans((prev) => {
+      const next = [newPlan, ...prev];
+      persistMicroPlans(next);
       return next;
     });
   };
@@ -204,13 +233,25 @@ export default function HomePage() {
                 <CardTitle>Describe the problem</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select
-                  label="Module"
-                  value={selectedModuleId}
-                  onChange={(event) => setSelectedModuleId(event.target.value)}
-                  options={moduleOptions}
-                  helperText="Switch modules to update archetypes and suggestion banks."
-                />
+                <div className="flex items-center justify-between gap-2">
+                  <Select
+                    label="Module"
+                    value={selectedModuleId}
+                    onChange={(event) => setSelectedModuleId(event.target.value)}
+                    options={moduleOptions}
+                    helperText="Switch modules to update archetypes and suggestion banks."
+                  />
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className="hidden text-indigo-700 hover:text-indigo-800 sm:inline-flex"
+                  >
+                    <Link href="/library" className="flex items-center gap-2 text-sm font-medium">
+                      <Library className="h-4 w-4" /> Library
+                      <span className="text-xs text-muted-foreground">{microPlans.length} saved</span>
+                    </Link>
+                  </Button>
+                </div>
                 <Textarea
                   value={problem}
                   onChange={(event) => setProblem(event.target.value)}
@@ -252,9 +293,17 @@ export default function HomePage() {
                   <p className="text-sm text-muted-foreground">
                     The generator prioritizes options that require less effort given your constraints.
                   </p>
-                  <Button size="lg" onClick={handleGenerate} className="shadow-md shadow-indigo-200">
-                    Generate Paths
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" asChild size="lg" className="shadow-none sm:hidden">
+                      <Link href="/library" className="flex items-center gap-2">
+                        <Library className="h-4 w-4" /> Library
+                        <span className="text-xs text-muted-foreground">{microPlans.length} saved</span>
+                      </Link>
+                    </Button>
+                    <Button size="lg" onClick={handleGenerate} className="shadow-md shadow-indigo-200">
+                      Generate Paths
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -302,6 +351,9 @@ export default function HomePage() {
                   selectionLabel={selectionLabel}
                   favorites={favorites}
                   onFavoriteToggle={(suggestion) => toggleFavorite(suggestion, selectedModule.meta.id)}
+                  onSaveMicroPlan={(suggestion) => saveMicroPlan(suggestion, archetype.name)}
+                  constraintsSnapshot={selection}
+                  problemSnapshot={problem}
                 />
               ))}
             </div>
