@@ -2,9 +2,10 @@
 
 import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { Flame, Timer, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SolutionCard } from "@/components/solution-card";
 import { HistoryPanel } from "@/components/history-panel";
@@ -13,10 +14,14 @@ import {
   type Suggestion,
   generateSolutionPaths,
   formatConstraintLabel,
-  formatBudgetLabel
+  formatBudgetLabel,
+  getFavoriteKey
 } from "@/lib/solutions";
+import { moduleRegistry } from "@/modules/moduleRegistry";
 
 const FAVORITES_KEY = "solution-atlas-favorites";
+const MODULE_KEY = "solution-atlas-module";
+const DEFAULT_MODULE_ID = moduleRegistry[0].meta.id;
 
 const energyOptions = [
   { label: "Low", value: "low" },
@@ -37,6 +42,11 @@ const budgetOptions = [
   { label: formatBudgetLabel("$20-100"), value: "$20-100" },
   { label: formatBudgetLabel("$100+"), value: "$100+" }
 ];
+
+const moduleOptions = moduleRegistry.map((module) => ({
+  label: module.meta.label,
+  value: module.meta.id
+}));
 
 type ConstraintOption<T extends string> = {
   label: string;
@@ -101,6 +111,7 @@ export default function HomePage() {
     time: "30m",
     budget: "$0"
   });
+  const [selectedModuleId, setSelectedModuleId] = useState(DEFAULT_MODULE_ID);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [hasGenerated, setHasGenerated] = useState(false);
 
@@ -111,28 +122,62 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => {
+    const savedModule = localStorage.getItem(MODULE_KEY);
+    if (savedModule && moduleRegistry.some((module) => module.meta.id === savedModule)) {
+      setSelectedModuleId(savedModule);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(MODULE_KEY, selectedModuleId);
+  }, [selectedModuleId]);
+
+  const selectedModule = useMemo(
+    () => moduleRegistry.find((module) => module.meta.id === selectedModuleId) ?? moduleRegistry[0],
+    [selectedModuleId]
+  );
+
   const selectionLabel = useMemo(() => formatConstraintLabel(selection), [selection]);
   const rankedPaths = useMemo(
-    () => generateSolutionPaths(selection),
-    [problem, selection.energy, selection.time, selection.budget]
+    () => generateSolutionPaths(selectedModule, selection),
+    [selectedModule, selection.energy, selection.time, selection.budget]
   );
 
   const handleGenerate = () => {
     setHasGenerated(true);
   };
 
-  const toggleFavorite = (suggestion: Suggestion) => {
+  const toggleFavorite = (suggestion: Suggestion, moduleId: string) => {
     setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(suggestion.id)) {
-        next.delete(suggestion.id);
+      const favoriteKey = getFavoriteKey(moduleId, suggestion.id);
+      const legacyKey = suggestion.id;
+      const isFavorite = next.has(favoriteKey) || next.has(legacyKey);
+
+      if (isFavorite) {
+        next.delete(favoriteKey);
+        next.delete(legacyKey);
       } else {
-        next.add(suggestion.id);
+        next.add(favoriteKey);
       }
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(next)));
       return next;
     });
   };
+
+  const favoriteChips = useMemo(
+    () =>
+      Array.from(favorites).map((id) => {
+        const [moduleId, suggestionId] = id.includes(":") ? id.split(":") : [DEFAULT_MODULE_ID, id];
+        const moduleLabel =
+          moduleRegistry.find((module) => module.meta.id === moduleId)?.meta.label ??
+          moduleRegistry[0].meta.label;
+
+        return { id, label: `${moduleLabel}: ${suggestionId}` };
+      }),
+    [favorites]
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
@@ -144,11 +189,11 @@ export default function HomePage() {
             </div>
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">
-                V0 Domain: Productivity + Focus
+                Module: {selectedModule.meta.label}
               </p>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Solution Atlas</h1>
               <p className="mt-3 text-lg text-muted-foreground">
-                Generate pragmatic, low-friction paths tailored to your time, energy, and budget.
+                {selectedModule.meta.shortDescription}
               </p>
             </div>
           </div>
@@ -159,6 +204,13 @@ export default function HomePage() {
                 <CardTitle>Describe the problem</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Select
+                  label="Module"
+                  value={selectedModuleId}
+                  onChange={(event) => setSelectedModuleId(event.target.value)}
+                  options={moduleOptions}
+                  helperText="Switch modules to update archetypes and suggestion banks."
+                />
                 <Textarea
                   value={problem}
                   onChange={(event) => setProblem(event.target.value)}
@@ -183,16 +235,18 @@ export default function HomePage() {
                     helperText="Available window for the next push."
                   />
                   <ConstraintToggleGroup
-                  label="Budget"
-                  icon={Wallet}
-                  options={budgetOptions}
-                  value={selection.budget}
-                  onChange={(value) => setSelection((prev) => ({ ...prev, budget: value as ConstraintSelection["budget"] }))}
-                  optionsClassName="flex flex-wrap gap-2"
-                  optionClassName="min-w-[96px]"
-                  helperText="What you can spend to move faster."
-                />
-              </div>
+                    label="Budget"
+                    icon={Wallet}
+                    options={budgetOptions}
+                    value={selection.budget}
+                    onChange={(value) =>
+                      setSelection((prev) => ({ ...prev, budget: value as ConstraintSelection["budget"] }))
+                    }
+                    optionsClassName="flex flex-wrap gap-2"
+                    optionClassName="min-w-[96px]"
+                    helperText="What you can spend to move faster."
+                  />
+                </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
@@ -213,12 +267,12 @@ export default function HomePage() {
                     <CardTitle className="text-sm">Favorites</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-wrap gap-2">
-                    {Array.from(favorites).map((id) => (
+                    {favoriteChips.map((favorite) => (
                       <span
-                        key={id}
+                        key={favorite.id}
                         className="rounded-full bg-white px-3 py-1 text-xs font-medium text-indigo-700 shadow-sm"
                       >
-                        {id}
+                        {favorite.label}
                       </span>
                     ))}
                   </CardContent>
@@ -242,11 +296,12 @@ export default function HomePage() {
             <div className="grid gap-4 md:grid-cols-2">
               {rankedPaths.map((archetype) => (
                 <SolutionCard
-                  key={archetype.id}
+                  key={`${selectedModule.meta.id}-${archetype.id}`}
+                  moduleId={selectedModule.meta.id}
                   archetype={archetype}
                   selectionLabel={selectionLabel}
                   favorites={favorites}
-                  onFavoriteToggle={toggleFavorite}
+                  onFavoriteToggle={(suggestion) => toggleFavorite(suggestion, selectedModule.meta.id)}
                 />
               ))}
             </div>
