@@ -10,17 +10,19 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type Archetype, type Suggestion, formatBudgetLabel } from "@/lib/solutions";
+import { type Archetype, type Suggestion, formatBudgetLabel, getFavoriteKey } from "@/lib/solutions";
 import { cn } from "@/lib/utils";
 
 interface SolutionCardProps {
+  moduleId: string;
   archetype: Archetype;
   selectionLabel: string;
   favorites: Set<string>;
-  onFavoriteToggle: (suggestion: Suggestion) => void;
+  onFavoriteToggle: (suggestion: Suggestion, moduleId: string) => void;
 }
 
 export function SolutionCard({
+  moduleId,
   archetype,
   selectionLabel,
   favorites,
@@ -62,7 +64,8 @@ export function SolutionCard({
         <>
           <CardContent className="space-y-4" id={`archetype-${archetype.id}`}>
             {archetype.suggestions.map((suggestion) => {
-              const isFavorite = favorites.has(suggestion.id);
+              const favoriteKey = getFavoriteKey(moduleId, suggestion.id);
+              const isFavorite = favorites.has(favoriteKey) || favorites.has(suggestion.id);
               return (
                 <div
                   key={suggestion.id}
@@ -90,7 +93,7 @@ export function SolutionCard({
                       variant={isFavorite ? "secondary" : "ghost"}
                       size="icon"
                       aria-label={isFavorite ? "Remove favorite" : "Favorite suggestion"}
-                      onClick={() => onFavoriteToggle(suggestion)}
+                      onClick={() => onFavoriteToggle(suggestion, moduleId)}
                     >
                       {isFavorite ? (
                         <BookmarkCheck className="h-4 w-4" />
