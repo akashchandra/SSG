@@ -10,6 +10,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "5 minutes",
         rationale: "Open a window, switch lighting, or put on a new playlist to reset your mood quickly.",
+        keywords: ["environment", "playlist", "reset"],
         energy: "low",
         time: "5m",
         budget: "$0"
@@ -20,6 +21,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "5 minutes",
         rationale: "Cycle 20 jumping jacks, a stretch, and deep breaths to jolt focus without a full workout.",
+        keywords: ["movement", "energize", "breath"],
         energy: "medium",
         time: "5m",
         budget: "$0"
@@ -30,6 +32,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "10 minutes",
         rationale: "Search a question that nags you, save one interesting link, and jot a takeaway.",
+        keywords: ["curiosity", "search", "spark"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -45,6 +48,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "moderate",
         timeEstimate: "25 minutes",
         rationale: "Pick a random prompt and ship a rough version (playlist, sketch, tiny script).",
+        keywords: ["maker", "prompt", "shipping"],
         energy: "medium",
         time: "30m",
         budget: "$0"
@@ -55,6 +59,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "moderate",
         timeEstimate: "45-60 minutes",
         rationale: "Buy a small material kit (gouache, clay, thread) and follow one beginner tutorial.",
+        keywords: ["supplies", "craft", "tutorial"],
         energy: "medium",
         time: "1-2h",
         budget: "$1-20"
@@ -65,6 +70,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "15-20 minutes daily",
         rationale: "Commit to a public hashtag or community prompt so you get external nudges to act.",
+        keywords: ["challenge", "community", "accountability"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -80,6 +86,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "15 minutes",
         rationale: "Reserve a short window for new music, a fresh article, or a different route outside.",
+        keywords: ["novelty", "routine", "playlist"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -90,6 +97,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "20 minutes",
         rationale: "Tidy cords, swap seating, or change screen layout to feel like a new environment.",
+        keywords: ["workspace", "reset", "environment"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -100,6 +108,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "30 minutes",
         rationale: "Create themed playlists and set 2 Pomodoro alarms with short, playful labels.",
+        keywords: ["playlist", "pomodoro", "cues"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -115,6 +124,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "5 minutes",
         rationale: "Ask someone to hop on a 20-minute focus call so you both start together.",
+        keywords: ["buddy", "call", "focus"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -125,6 +135,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "moderate",
         timeEstimate: "30 minutes",
         rationale: "Each person brings one stuck idea; trade quick feedback and a next step.",
+        keywords: ["feedback", "ideas", "swap"],
         energy: "medium",
         time: "30m",
         budget: "$0"
@@ -135,6 +146,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "moderate",
         timeEstimate: "60-90 minutes",
         rationale: "Pick a nearby meetup, gallery night, or open mic to refresh your inputs.",
+        keywords: ["meetup", "event", "explore"],
         energy: "medium",
         time: "1-2h",
         budget: "$1-20"
@@ -150,6 +162,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "20 minutes",
         rationale: "List 3 past projects you loved, 3 values you care about, and overlap themes.",
+        keywords: ["values", "reflection", "meaning"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -160,6 +173,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "20 minutes",
         rationale: "Note when you feel dull vs. alive over a day to spot patterns worth changing.",
+        keywords: ["energy", "tracking", "patterns"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -170,6 +184,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "30 minutes",
         rationale: "Scroll your camera roll or saved links and jot 5 topics that still feel interesting.",
+        keywords: ["curiosity", "log", "interests"],
         energy: "low",
         time: "30m",
         budget: "$0"
@@ -185,6 +200,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "5 minutes",
         rationale: "Keep a deck on your desk so you can pull a random creative constraint on demand.",
+        keywords: ["cards", "prompts", "creative"],
         energy: "low",
         time: "5m",
         budget: "$1-20"
@@ -195,6 +211,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "moderate",
         timeEstimate: "60-90 minutes",
         rationale: "Reserve a pottery, dance, or improv class to jolt you into a different context.",
+        keywords: ["class", "experience", "novelty"],
         energy: "medium",
         time: "1-2h",
         budget: "$20-100"
@@ -205,6 +222,7 @@ export const boredomBank: ArchetypeBankEntry[] = [
         effort: "light",
         timeEstimate: "5 minutes",
         rationale: "Get a weekly list of events or prompts so discovery happens automatically.",
+        keywords: ["newsletter", "events", "discover"],
         energy: "low",
         time: "5m",
         budget: "$0"

@@ -17,6 +17,7 @@ export interface Suggestion {
   energy: EnergyLevel;
   time: TimeBudget;
   budget: CostBudget;
+  keywords?: string[];
 }
 
 export type ArchetypeId =
@@ -65,4 +66,5 @@ export interface ArchetypeResult {
   name: string;
   summary: string;
   suggestions: Suggestion[];
+  score?: number;
 }
