@@ -46,22 +46,55 @@ function frictionScore(selection: ConstraintSelection, suggestion: Suggestion) {
   return timeGap * 2 + energyGap * 1.5 + budgetGap;
 }
 
+function extractProblemKeywords(problem: string) {
+  return new Set(
+    (problem.toLowerCase().match(/[a-zA-Z]+/g) || [])
+      .filter((word) => word.length >= 4)
+      .map((word) => word)
+  );
+}
+
+function keywordBonus(problemKeywords: Set<string>, suggestion: Suggestion) {
+  const keywordTokens = (suggestion.keywords || [])
+    .flatMap((keyword) => keyword.toLowerCase().split(/\s+/))
+    .filter(Boolean);
+  const matches = keywordTokens.filter((keyword) => problemKeywords.has(keyword));
+  return matches.length * 0.6;
+}
+
+function suggestionScore(
+  selection: ConstraintSelection,
+  suggestion: Suggestion,
+  problemKeywords: Set<string>
+) {
+  return frictionScore(selection, suggestion) - keywordBonus(problemKeywords, suggestion);
+}
+
 export function generateSolutionPaths(
   module: ModuleDefinition,
-  selection: ConstraintSelection
+  selection: ConstraintSelection,
+  problem = ""
 ): ArchetypeResult[] {
+  const problemKeywords = extractProblemKeywords(problem);
+
   return ARCHETYPE_ORDER.map((archetypeId) => {
     const archetypeLabel = module.meta.archetypeLabels[archetypeId];
     const bank = module.bank.find((entry) => entry.id === archetypeId);
-    const ranked = [...(bank?.suggestions ?? [])].sort(
-      (a, b) => frictionScore(selection, a) - frictionScore(selection, b)
-    );
+    const scored = [...(bank?.suggestions ?? [])]
+      .map((suggestion) => ({
+        suggestion,
+        score: suggestionScore(selection, suggestion, problemKeywords)
+      }))
+      .sort((a, b) => a.score - b.score);
+    const ranked = scored.map((entry) => entry.suggestion);
+    const bestScore = scored[0]?.score ?? Number.POSITIVE_INFINITY;
 
     return {
       id: archetypeId,
       name: archetypeLabel.name,
       summary: archetypeLabel.summary,
-      suggestions: ranked.slice(0, 3)
+      suggestions: ranked.slice(0, 3),
+      score: bestScore
     };
   });
 }

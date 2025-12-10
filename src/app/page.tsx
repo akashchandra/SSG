@@ -55,6 +55,24 @@ const moduleOptions = moduleRegistry.map((module) => ({
   value: module.meta.id
 }));
 
+const sampleProblems: Record<string, string[]> = {
+  productivity: [
+    "I keep procrastinating on a draft because the scope feels fuzzy",
+    "I need a faster way to decide which feature to ship first",
+    "I want lightweight ways to reuse work without starting from scratch"
+  ],
+  fitness: [
+    "I fall off workouts because I don't have a simple routine to follow",
+    "I want a quick energy reset between meetings without a full session",
+    "I need accountability to stay consistent with strength training"
+  ],
+  boredom: [
+    "My workdays feel stale and I want sparks of novelty",
+    "I want a small creative project to make evenings more interesting",
+    "I get bored alone and need quick social prompts to engage"
+  ]
+};
+
 type ConstraintOption<T extends string> = {
   label: string;
   value: T;
@@ -122,6 +140,7 @@ export default function HomePage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [microPlans, setMicroPlans] = useState<MicroPlan[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const problemValid = problem.trim().length >= 8;
 
   useEffect(() => {
     setFavorites(loadFavorites());
@@ -149,11 +168,23 @@ export default function HomePage() {
 
   const selectionLabel = useMemo(() => formatConstraintLabel(selection), [selection]);
   const rankedPaths = useMemo(
-    () => generateSolutionPaths(selectedModule, selection),
+    () => generateSolutionPaths(selectedModule, selection, problem),
     [selectedModule, selection.energy, selection.time, selection.budget, problem]
   );
 
+  const recommendedFocus = useMemo(
+    () =>
+      [...rankedPaths]
+        .map((entry) => ({ ...entry, score: entry.score ?? Number.POSITIVE_INFINITY }))
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 2),
+    [rankedPaths]
+  );
+
+  const showProblemLens = hasGenerated && problemValid;
+
   const handleGenerate = () => {
+    if (!problemValid) return;
     setHasGenerated(true);
   };
 
@@ -257,6 +288,26 @@ export default function HomePage() {
                   onChange={(event) => setProblem(event.target.value)}
                   placeholder="Where are you stuck? What outcome do you want?"
                 />
+                {!problem.trim().length ? (
+                  <p className="text-sm text-muted-foreground">Add your problem to generate tailored paths.</p>
+                ) : null}
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sample problems</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(sampleProblems[selectedModule.meta.id] ?? []).slice(0, 3).map((sample) => (
+                      <Button
+                        key={sample}
+                        variant="outline"
+                        size="sm"
+                        className="h-auto whitespace-normal px-3 py-2 text-left text-xs"
+                        onClick={() => setProblem(sample)}
+                      >
+                        {sample}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <ConstraintToggleGroup
@@ -300,7 +351,12 @@ export default function HomePage() {
                         <span className="text-xs text-muted-foreground">{microPlans.length} saved</span>
                       </Link>
                     </Button>
-                    <Button size="lg" onClick={handleGenerate} className="shadow-md shadow-indigo-200">
+                    <Button
+                      size="lg"
+                      onClick={handleGenerate}
+                      className="shadow-md shadow-indigo-200"
+                      disabled={!problemValid}
+                    >
                       Generate Paths
                     </Button>
                   </div>
@@ -332,6 +388,46 @@ export default function HomePage() {
         </header>
 
         <section className="space-y-4">
+          {showProblemLens ? (
+            <Card className="border-indigo-100 bg-white/80 shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Problem Lens</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your problem</p>
+                  <p className="text-base text-foreground">{problem}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Constraints</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-[11px] uppercase">
+                      Energy: {selection.energy}
+                    </Badge>
+                    <Badge variant="outline" className="text-[11px] uppercase">
+                      Time: {selection.time}
+                    </Badge>
+                    <Badge variant="outline" className="text-[11px] uppercase">
+                      Budget: {formatBudgetLabel(selection.budget)}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Recommended focus today
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {recommendedFocus.map((entry) => (
+                      <Badge key={entry.id} variant="secondary" className="text-[11px]">
+                        {entry.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-sm uppercase tracking-wide text-indigo-600">Solution Archetypes</p>
@@ -366,7 +462,12 @@ export default function HomePage() {
                 </p>
               </CardHeader>
               <CardContent>
-                <Button size="lg" className="shadow-md shadow-indigo-200" onClick={handleGenerate}>
+                <Button
+                  size="lg"
+                  className="shadow-md shadow-indigo-200"
+                  onClick={handleGenerate}
+                  disabled={!problemValid}
+                >
                   Generate first paths
                 </Button>
               </CardContent>
